@@ -286,7 +286,7 @@ const TankaCounter: React.FC = () => {
         {/* Instructions */}
         <section className="mb-6">
           <div className="flex justify-between items-start">
-            <h2 className="text-lg font-medium text-gray-800 font-jp">入力方法</h2>
+            <h2 className="text-lg font-bold text-black font-jp">入力方法</h2>
             <Button 
               variant="ghost" 
               onClick={toggleExample} 
@@ -297,16 +297,16 @@ const TankaCounter: React.FC = () => {
             </Button>
           </div>
           
-          <p className="text-gray-600 mt-2 font-jp text-sm">
+          <p className="text-black mt-2 font-jp text-sm">
             ひらがなで入力してください。自動的に 5-7-5-7-7 の音数で分析されます。
           </p>
 
           {/* Example Section */}
           {showExample && (
-            <div className="mt-3 p-4 bg-gray-50 rounded-lg">
-              <h3 className="text-sm font-medium text-gray-700 mb-2 font-jp">例:</h3>
-              <p className="font-jp text-gray-600 text-sm">たんぽぽのわたげがとんだはるのそらまいあがるようにこどものこえ</p>
-              <div className="mt-2 font-jp text-sm text-gray-700 bg-white p-3 rounded border border-gray-200">
+            <div className="mt-3 p-4 bg-white border border-black">
+              <h3 className="text-sm font-bold text-black mb-2 font-jp">例:</h3>
+              <p className="font-jp text-black text-sm">たんぽぽのわたげがとんだはるのそらまいあがるようにこどものこえ</p>
+              <div className="mt-2 font-jp text-sm text-black bg-white p-3 border border-black">
                 <p>たんぽぽの／</p>
                 <p>わたげがとんだ／</p>
                 <p>はるのそら／</p>
@@ -360,17 +360,17 @@ const TankaCounter: React.FC = () => {
 
         {/* Results Area */}
         <section>
-          <h2 className="text-lg font-medium text-gray-800 mb-2 font-jp">結果</h2>
-          <div className="min-h-[180px] p-4 bg-gray-50 rounded-lg border border-gray-200">
+          <h2 className="text-lg font-bold text-black mb-2 font-jp">結果</h2>
+          <div className="min-h-[180px] p-4 bg-white border border-black">
             {!showResult && !showError && (
-              <div className="flex flex-col items-center justify-center h-full text-gray-400 py-8">
+              <div className="flex flex-col items-center justify-center h-full text-black py-8">
                 <i className="ri-file-text-line text-3xl mb-2"></i>
                 <p className="font-jp text-sm">短歌を入力すると、自動的に分割されます</p>
               </div>
             )}
             
             {showResult && (
-              <div className="font-jp text-gray-800 leading-relaxed">
+              <div className="font-jp text-black leading-relaxed">
                 <div className="flex flex-wrap">
                   {displayedLines.map((line, index) => (
                     <span key={index} className="inline-block">{line}</span>
@@ -389,26 +389,26 @@ const TankaCounter: React.FC = () => {
                 )}
                 
                 {showKanjiEditor && (
-                  <div className="mt-4 bg-white p-4 rounded-lg border border-gray-200">
-                    <h3 className="text-sm font-medium text-gray-700 mb-2 font-jp">漢字に変換</h3>
+                  <div className="mt-4 bg-white p-4 border border-black">
+                    <h3 className="text-sm font-bold text-black mb-2 font-jp">漢字に変換</h3>
                     <Textarea
                       ref={kanjiEditorRef}
                       value={kanjiVersion}
                       placeholder="漢字を含めた最終版を入力してください..."
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary font-jp text-gray-800 resize-none h-24 mb-3"
+                      className="w-full px-4 py-3 border border-black focus:ring-1 focus:ring-black focus:border-black font-jp text-black resize-none h-24 mb-3"
                       onChange={handleKanjiChange}
                     />
                     <div className="flex justify-end gap-2">
                       <Button
                         variant="secondary"
                         onClick={() => setShowKanjiEditor(false)}
-                        className="bg-gray-200 hover:bg-gray-300 text-gray-700"
+                        className="bg-white hover:bg-gray-100 text-black border border-black"
                       >
                         キャンセル
                       </Button>
                       <Button
                         onClick={saveTanka}
-                        className="bg-success hover:bg-success/90 text-white"
+                        className="bg-black hover:bg-black/80 text-white border border-black"
                       >
                         <i className="ri-save-line mr-1"></i> 保存
                       </Button>
@@ -426,7 +426,7 @@ const TankaCounter: React.FC = () => {
           </div>
 
           {showResult && (
-            <div className="mt-4 text-xs text-gray-500 flex font-jp">
+            <div className="mt-4 text-xs flex font-jp">
               <div className="flex flex-wrap gap-2">
                 {TANKA_PATTERN.map((count, index) => (
                   <Badge 
@@ -438,12 +438,12 @@ const TankaCounter: React.FC = () => {
                         ? "secondary" 
                         : "default"
                     }
-                    className={`px-2 py-1 rounded ${
+                    className={`px-2 py-1 ${
                       moraStatus[index] === "success" 
-                        ? "bg-success/10 text-success border-success/20" 
+                        ? "bg-white text-black border border-black" 
                         : moraStatus[index] === "warning" 
-                        ? "bg-secondary/10 text-secondary border-secondary/20" 
-                        : "bg-primary/10 text-primary border-primary/20"
+                        ? "bg-black text-white border border-black" 
+                        : "bg-white text-black border border-black opacity-50"
                     }`}
                   >
                     {count}音
@@ -460,12 +460,12 @@ const TankaCounter: React.FC = () => {
       {savedTanka.length > 0 && (
         <CardContent className="px-6 pt-0 pb-6">
           <section>
-            <h2 className="text-lg font-medium text-gray-800 mb-2 font-jp">保存された短歌</h2>
-            <div className="bg-gray-50 rounded-lg border border-gray-200 p-4">
+            <h2 className="text-lg font-bold text-black mb-2 font-jp">保存された短歌</h2>
+            <div className="bg-white border border-black p-4">
               {savedTanka.map((tanka, index) => (
                 <div 
                   key={index} 
-                  className="mb-3 pb-3 border-b border-gray-200 last:border-0 last:mb-0 last:pb-0 font-jp"
+                  className="mb-3 pb-3 border-b border-black last:border-0 last:mb-0 last:pb-0 font-jp"
                 >
                   {tanka}
                 </div>
