@@ -26,6 +26,19 @@ const TankaCounter: React.FC = () => {
   const EXPECTED_TOTAL = TANKA_PATTERN.reduce((a, b) => a + b, 0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // Process and display tanka in real-time
+  useEffect(() => {
+    if (input.trim() === "") {
+      setShowResult(false);
+      setResult([]);
+      setMoraStatus(["default", "default", "default", "default", "default"]);
+      return;
+    }
+
+    processTanka(input.trim());
+    setShowResult(true);
+  }, [input]);
+
   // Update character count when input changes
   useEffect(() => {
     setCharCount(input.length);
@@ -36,24 +49,15 @@ const TankaCounter: React.FC = () => {
     setInput(e.target.value);
   };
 
-  // Handle counting and displaying syllables
-  const countSyllables = () => {
-    const trimmedInput = input.trim();
-    
-    // Reset display states
-    setShowResult(false);
+  // Process and format the tanka
+  const processTanka = (text: string) => {
+    // Reset error state
     setShowError(false);
     
-    // Validate input
-    if (!trimmedInput) {
-      return;
-    }
-    
-    // Check if input roughly matches expected total
-    if (Math.abs(trimmedInput.length - EXPECTED_TOTAL) > 5) {
-      setErrorMessage(`入力された文字数(${trimmedInput.length})が短歌の標準的な音数(${EXPECTED_TOTAL})と大きく異なります。`);
+    // Check if input roughly matches expected total (only show warning, don't block)
+    if (Math.abs(text.length - EXPECTED_TOTAL) > 5) {
+      setErrorMessage(`入力された文字数(${text.length})が短歌の標準的な音数(${EXPECTED_TOTAL})と大きく異なります。`);
       setShowError(true);
-      return;
     }
     
     // Process and display the tanka
@@ -63,7 +67,7 @@ const TankaCounter: React.FC = () => {
     
     for (let i = 0; i < TANKA_PATTERN.length; i++) {
       const len = TANKA_PATTERN[i];
-      const phrase = trimmedInput.slice(pointer, pointer + len);
+      const phrase = text.slice(pointer, pointer + len);
       outputLines.push(phrase + "／");
       
       // Check if this segment has the correct number of characters
@@ -78,7 +82,18 @@ const TankaCounter: React.FC = () => {
     
     setMoraStatus(newMoraStatus);
     setResult(outputLines);
-    setShowResult(true);
+  };
+
+  // Handle counting and displaying syllables (kept for the button click functionality)
+  const countSyllables = () => {
+    const trimmedInput = input.trim();
+    
+    // Validate input
+    if (!trimmedInput) {
+      return;
+    }
+    
+    processTanka(trimmedInput);
   };
 
   // Handle clear button
@@ -177,18 +192,11 @@ const TankaCounter: React.FC = () => {
           
           <div className="flex gap-2 mt-4">
             <Button
-              onClick={countSyllables}
-              className="flex-1 bg-primary hover:bg-primary/90 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center"
-            >
-              <i className="ri-text-spacing mr-1"></i> 音数をカウントして表示
-            </Button>
-            
-            <Button
               variant="secondary"
               onClick={clearInput}
-              className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors duration-200"
+              className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center"
             >
-              <i className="ri-delete-bin-line"></i>
+              <i className="ri-delete-bin-line mr-1"></i> 入力をクリア
             </Button>
           </div>
         </section>
@@ -200,7 +208,7 @@ const TankaCounter: React.FC = () => {
             {!showResult && !showError && (
               <div className="flex flex-col items-center justify-center h-full text-gray-400 py-8">
                 <i className="ri-file-text-line text-3xl mb-2"></i>
-                <p className="font-jp text-sm">短歌を入力してボタンを押してください</p>
+                <p className="font-jp text-sm">短歌を入力すると、自動的に分割されます</p>
               </div>
             )}
             
@@ -213,7 +221,7 @@ const TankaCounter: React.FC = () => {
             )}
             
             {showError && (
-              <div className="text-error font-jp text-sm">
+              <div className="text-error font-jp text-sm mb-2">
                 {errorMessage}
               </div>
             )}
