@@ -4,6 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 const TankaCounter: React.FC = () => {
   const [userInput, setUserInput] = useState<string>("");
@@ -287,21 +288,24 @@ const TankaCounter: React.FC = () => {
   };
 
   return (
-    <Card className="w-full max-w-2xl mx-auto bg-white shadow-lg overflow-hidden border border-black">
+    <Card className="w-full max-w-2xl mx-auto bg-card shadow-lg overflow-hidden border border-primary rounded-md">
       {/* Header */}
-      <CardHeader className="bg-primary px-6 py-4 text-primary-foreground border-b border-black">
-        <h1 className="text-3xl font-bold font-jp tracking-tight">短歌音数カウンター</h1>
-        <p className="text-sm mt-1">Tanka Syllable Counter</p>
+      <CardHeader className="bg-primary px-6 py-4 text-primary-foreground border-b border-border flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold font-jp tracking-tight">短歌音数カウンター</h1>
+          <p className="text-sm mt-1">Tanka Syllable Counter</p>
+        </div>
+        <ThemeToggle />
       </CardHeader>
 
       <CardContent className="p-6">
         {/* Instructions */}
         <section className="mb-6">
           <div>
-            <h2 className="text-lg font-bold text-black font-jp">入力方法</h2>
+            <h2 className="text-lg font-bold text-foreground font-jp">入力方法</h2>
           </div>
           
-          <p className="text-black mt-2 font-jp text-sm">
+          <p className="text-foreground mt-2 font-jp text-sm">
             ひらがなで入力してください。自動的に 5-7-5-7-7 の音数で分析されます。
           </p>
 
