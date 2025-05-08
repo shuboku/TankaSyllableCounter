@@ -275,11 +275,11 @@ const TankaCounter: React.FC = () => {
   };
 
   return (
-    <Card className="w-full max-w-2xl mx-auto bg-white rounded-xl shadow-md overflow-hidden">
+    <Card className="w-full max-w-2xl mx-auto bg-white shadow-lg overflow-hidden border border-black">
       {/* Header */}
-      <CardHeader className="bg-primary px-6 py-4 text-white">
-        <h1 className="text-2xl font-bold font-jp">短歌音数カウンター</h1>
-        <p className="text-sm opacity-90 mt-1">Tanka Syllable Counter</p>
+      <CardHeader className="bg-primary px-6 py-4 text-primary-foreground border-b border-black">
+        <h1 className="text-3xl font-bold font-jp tracking-tight">短歌音数カウンター</h1>
+        <p className="text-sm mt-1">Tanka Syllable Counter</p>
       </CardHeader>
 
       <CardContent className="p-6">
@@ -328,21 +328,21 @@ const TankaCounter: React.FC = () => {
               ref={textareaRef}
               value={userInput}
               placeholder="ひらがなで短歌を入力してください..."
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary font-jp text-gray-800 resize-none h-32"
+              className="w-full px-4 py-3 border border-black focus:ring-1 focus:ring-black focus:border-black font-jp text-black resize-none h-32"
               onChange={handleInputChange}
             />
-            <div className="absolute bottom-2 right-2 text-sm font-bold bg-white/90 px-2 py-1 rounded shadow-sm border border-gray-200">
+            <div className="absolute bottom-2 right-2 text-sm font-bold bg-white px-2 py-1 border border-black">
               <span className={`${
                 displayCount === 0 
-                  ? "text-gray-700" 
+                  ? "text-black opacity-70" 
                   : displayCount === EXPECTED_TOTAL 
-                  ? "text-success" 
-                  : "text-primary"
+                  ? "text-black" 
+                  : "text-black"
               }`}>
                 {displayCount} 音
               </span>
               {displayCount > 0 && displayCount !== EXPECTED_TOTAL && 
-                <span className="text-gray-500 ml-1 text-xs">(標準: {EXPECTED_TOTAL}音)</span>
+                <span className="text-black opacity-70 ml-1 text-xs">(標準: {EXPECTED_TOTAL}音)</span>
               }
             </div>
           </div>
@@ -351,7 +351,7 @@ const TankaCounter: React.FC = () => {
             <Button
               variant="secondary"
               onClick={clearInput}
-              className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center"
+              className="flex-1 bg-white hover:bg-gray-100 text-black font-medium py-2 px-4 border border-black transition-colors duration-200 flex items-center justify-center"
             >
               <i className="ri-delete-bin-line mr-1"></i> 入力をクリア
             </Button>
@@ -381,7 +381,7 @@ const TankaCounter: React.FC = () => {
                   <div className="mt-4">
                     <Button
                       onClick={showKanjiConversionEditor}
-                      className="bg-primary hover:bg-primary/90 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
+                      className="bg-black hover:bg-black/80 text-white font-medium py-2 px-4 border border-black transition-colors duration-200"
                     >
                       <i className="ri-translate-2 mr-1"></i> 漢字に変換して保存
                     </Button>
