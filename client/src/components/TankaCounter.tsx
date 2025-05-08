@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 
 const TankaCounter: React.FC = () => {
-  const [input, setInput] = useState<string>("");
+  const [rawInput, setRawInput] = useState<string>("");
+  const [formattedInput, setFormattedInput] = useState<string>("");
   const [result, setResult] = useState<string[]>([]);
   const [charCount, setCharCount] = useState<number>(0);
   const [showExample, setShowExample] = useState<boolean>(false);
@@ -25,32 +26,99 @@ const TankaCounter: React.FC = () => {
   const TANKA_PATTERN = [5, 7, 5, 7, 7];
   const EXPECTED_TOTAL = TANKA_PATTERN.reduce((a, b) => a + b, 0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const selectionRef = useRef<{start: number; end: number}>({ start: 0, end: 0 });
 
-  // Process and display tanka in real-time
+  // Format raw input for display with line breaks
   useEffect(() => {
-    if (input.trim() === "") {
+    if (rawInput.trim() === "") {
+      setFormattedInput("");
       setShowResult(false);
       setResult([]);
       setMoraStatus(["default", "default", "default", "default", "default"]);
       return;
     }
 
-    processTanka(input.trim());
+    const cleanInput = rawInput.replace(/\n/g, ""); // Remove any existing line breaks
+    let formatted = "";
+    let pointer = 0;
+    
+    // Apply formatting to each section based on pattern
+    for (let i = 0; i < TANKA_PATTERN.length; i++) {
+      const len = TANKA_PATTERN[i];
+      const endPos = Math.min(pointer + len, cleanInput.length);
+      const phrase = cleanInput.slice(pointer, endPos);
+      
+      formatted += phrase;
+      
+      // Add line break after each section except the last one
+      if (i < TANKA_PATTERN.length - 1 && endPos < cleanInput.length) {
+        formatted += "\n";
+      }
+      
+      pointer = endPos;
+    }
+    
+    // Add any remaining text that exceeds the pattern
+    if (pointer < cleanInput.length) {
+      // If we're already at a line break, don't add another
+      if (formatted.endsWith("\n")) {
+        formatted += cleanInput.slice(pointer);
+      } else {
+        formatted += "\n" + cleanInput.slice(pointer);
+      }
+    }
+    
+    setFormattedInput(formatted);
+    processForDisplay(cleanInput);
     setShowResult(true);
-  }, [input]);
+  }, [rawInput]);
 
-  // Update character count when input changes
+  // Update character count
   useEffect(() => {
-    setCharCount(input.length);
-  }, [input]);
+    setCharCount(rawInput.length);
+  }, [rawInput]);
 
-  // Handle input change
+  // Handle input change - store raw input without formatting
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInput(e.target.value);
+    // Save current selection
+    if (textareaRef.current) {
+      selectionRef.current = {
+        start: textareaRef.current.selectionStart,
+        end: textareaRef.current.selectionEnd
+      };
+    }
+    
+    // Remove line breaks and store raw input
+    const newRawInput = e.target.value.replace(/\n/g, "");
+    setRawInput(newRawInput);
   };
 
-  // Process and format the tanka
-  const processTanka = (text: string) => {
+  // Restore cursor position after formatting
+  useEffect(() => {
+    if (textareaRef.current) {
+      const textarea = textareaRef.current;
+      
+      // Set the value directly to prevent controlled/uncontrolled component warnings
+      textarea.value = formattedInput;
+      
+      // Need to wait for the DOM to update
+      setTimeout(() => {
+        if (textarea) {
+          // Try to find the equivalent position in the formatted text
+          const pos = Math.min(selectionRef.current.start, formattedInput.length);
+          textarea.setSelectionRange(pos, pos);
+        }
+      }, 0);
+    }
+  }, [formattedInput]);
+
+  // Process tanka for display in results area
+  const processForDisplay = (text: string) => {
+    // Process and display the tanka
+    const outputLines: string[] = [];
+    const newMoraStatus = [...moraStatus];
+    let pointer = 0;
+    
     // Reset error state
     setShowError(false);
     
@@ -60,59 +128,51 @@ const TankaCounter: React.FC = () => {
       setShowError(true);
     }
     
-    // Process and display the tanka
-    const outputLines: string[] = [];
-    const newMoraStatus = [...moraStatus];
-    let pointer = 0;
-    
     for (let i = 0; i < TANKA_PATTERN.length; i++) {
       const len = TANKA_PATTERN[i];
-      const phrase = text.slice(pointer, pointer + len);
+      const availableText = text.slice(pointer);
+      const phrase = availableText.slice(0, len);
       outputLines.push(phrase + "／");
       
       // Check if this segment has the correct number of characters
       if (phrase.length === len) {
         newMoraStatus[i] = "success";
-      } else {
+      } else if (phrase.length > 0) {
         newMoraStatus[i] = "warning";
+      } else {
+        newMoraStatus[i] = "default";
       }
       
       pointer += len;
+    }
+    
+    // Handle any remaining text beyond pattern
+    if (pointer < text.length) {
+      outputLines.push(text.slice(pointer) + "／");
     }
     
     setMoraStatus(newMoraStatus);
     setResult(outputLines);
   };
 
-  // Handle counting and displaying syllables (kept for the button click functionality)
-  const countSyllables = () => {
-    const trimmedInput = input.trim();
-    
-    // Validate input
-    if (!trimmedInput) {
-      return;
-    }
-    
-    processTanka(trimmedInput);
-  };
-
   // Handle clear button
   const clearInput = () => {
-    setInput("");
+    setRawInput("");
+    setFormattedInput("");
     setResult([]);
     setShowResult(false);
-    setShowError(false);
     setMoraStatus(["default", "default", "default", "default", "default"]);
     if (textareaRef.current) {
       textareaRef.current.focus();
     }
   };
 
-  // Handle Enter key press in textarea
+  // Handle Enter key press in textarea - just ignore it to prevent form submission
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === 'Enter') {
+      // Prevent default to avoid form submission, but don't add any logic here
+      // as we want Enter key to behave normally for line breaks
       e.preventDefault();
-      countSyllables();
     }
   };
 
@@ -175,7 +235,7 @@ const TankaCounter: React.FC = () => {
               ref={textareaRef}
               placeholder="ひらがなで短歌を入力してください..."
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary font-jp text-gray-800 resize-none h-32"
-              value={input}
+              defaultValue=""
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
             />
