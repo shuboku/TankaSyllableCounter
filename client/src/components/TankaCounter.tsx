@@ -331,14 +331,19 @@ const TankaCounter: React.FC = () => {
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary font-jp text-gray-800 resize-none h-32"
               onChange={handleInputChange}
             />
-            <div className={`absolute bottom-2 right-2 text-xs font-bold ${
-              displayCount === 0 
-                ? "text-gray-500" 
-                : displayCount === EXPECTED_TOTAL 
-                ? "text-success" 
-                : "text-secondary"
-            }`}>
-              <span>{displayCount}</span> 音 {displayCount > 0 && displayCount !== EXPECTED_TOTAL && `(標準: ${EXPECTED_TOTAL}音)`}
+            <div className="absolute bottom-2 right-2 text-sm font-bold bg-white/90 px-2 py-1 rounded shadow-sm border border-gray-200">
+              <span className={`${
+                displayCount === 0 
+                  ? "text-gray-700" 
+                  : displayCount === EXPECTED_TOTAL 
+                  ? "text-success" 
+                  : "text-primary"
+              }`}>
+                {displayCount} 音
+              </span>
+              {displayCount > 0 && displayCount !== EXPECTED_TOTAL && 
+                <span className="text-gray-500 ml-1 text-xs">(標準: {EXPECTED_TOTAL}音)</span>
+              }
             </div>
           </div>
           
