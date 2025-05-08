@@ -482,10 +482,6 @@ const TankaCounter: React.FC = () => {
           </section>
         </CardContent>
       )}
-      
-      <CardFooter className="px-6 py-4 border-t border-border text-center text-xs text-foreground">
-        <p className="w-full">© 2023 短歌音数カウンター</p>
-      </CardFooter>
     </Card>
   );
 };

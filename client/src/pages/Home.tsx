@@ -3,7 +3,7 @@ import TankaCounter from "@/components/TankaCounter";
 
 const Home: React.FC = () => {
   return (
-    <div className="bg-gray-50 min-h-screen flex flex-col items-center py-8 px-4 sm:px-6 font-sans">
+    <div className="bg-background min-h-screen flex flex-col items-center py-8 px-0 font-sans md:px-4">
       <TankaCounter />
     </div>
   );
