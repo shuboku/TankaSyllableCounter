@@ -391,7 +391,7 @@ const TankaCounter: React.FC = () => {
                       onClick={showKanjiConversionEditor}
                       className="bg-primary hover:bg-primary/80 text-primary-foreground font-medium px-4 border border-border rounded-md transition-colors duration-200"
                     >
-                      <i className="ri-translate-2 mr-1"></i> 漢字に変換して保存
+                      <i className="ri-translate-2 mr-1"></i> 清書欄
                     </Button>
                   </div>
                 )}
