@@ -51,12 +51,21 @@ const TankaCounter: React.FC = () => {
         continue;
       }
       
-      // Skip characters that are part of the previous mora
+      // Check if the next character forms a mora unit with this one
+      if (i + 1 < text.length && 
+          (SMALL_KANA.test(text[i+1]) || LONG_VOWEL.test(text[i+1]))) {
+        count++;
+        i++; // Skip the next character as we've counted it as part of this mora
+        continue;
+      }
+      
+      // Skip characters that are part of the previous mora (should rarely happen with the check above)
       if (i > 0 && 
           (SMALL_KANA.test(text[i]) || 
            (LONG_VOWEL.test(text[i])))) {
         continue;
       }
+      
       count++;
     }
     
@@ -80,29 +89,38 @@ const TankaCounter: React.FC = () => {
       
       let currentMora = 0;
       let endPos = currentPos;
+      let inExcludedSection = false;
+      let excludedText = "";
       
       // Count mora until we reach the target or end of text
       while (currentMora < targetMora && endPos < text.length) {
-        // Move to next character
-        endPos++;
+        const currentChar = text[endPos];
         
-        // Skip excluded characters like quotes, spaces, etc.
-        if (endPos < text.length && EXCLUDED_CHARS.test(text[endPos])) {
-          continue;
-        }
-        
-        // Skip characters that are part of the previous mora
-        if (endPos < text.length && 
-            (SMALL_KANA.test(text[endPos]) || 
-             LONG_VOWEL.test(text[endPos]))) {
+        // Keep track of excluded characters in the segment
+        if (EXCLUDED_CHARS.test(currentChar)) {
+          inExcludedSection = true;
+          excludedText += currentChar;
           endPos++;
           continue;
         }
         
+        // Check for small kana or long vowel
+        if (endPos + 1 < text.length) {
+          const nextChar = text[endPos + 1];
+          if (SMALL_KANA.test(nextChar) || LONG_VOWEL.test(nextChar)) {
+            // Move position after this complete mora unit
+            endPos += 2;
+            currentMora++;
+            continue;
+          }
+        }
+        
+        // Regular character (counts as one mora)
+        endPos++;
         currentMora++;
       }
       
-      // Add the segment to results
+      // Add the segment to results, preserving excluded characters
       result.push(text.substring(currentPos, endPos));
       currentPos = endPos;
     }
