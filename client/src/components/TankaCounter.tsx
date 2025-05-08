@@ -9,6 +9,7 @@ const TankaCounter: React.FC = () => {
   const [userInput, setUserInput] = useState<string>("");
   const [displayedLines, setDisplayedLines] = useState<string[]>([]);
   const [moraCount, setMoraCount] = useState<number>(0);
+  const [displayCount, setDisplayCount] = useState<number>(0); // Separate state for display
   const [showExample, setShowExample] = useState<boolean>(false);
   const [showResult, setShowResult] = useState<boolean>(false);
   const [showError, setShowError] = useState<boolean>(false);
@@ -138,6 +139,7 @@ const TankaCounter: React.FC = () => {
     if (!input || input.trim() === "") {
       setDisplayedLines([]);
       setMoraCount(0);
+      setDisplayCount(0);
       setShowResult(false);
       setShowError(false);
       setMoraStatus(["default", "default", "default", "default", "default"]);
@@ -146,45 +148,75 @@ const TankaCounter: React.FC = () => {
       return;
     }
     
+    // Always set showResult to true when there's input
+    setShowResult(true);
+    
     try {
-      // Count total mora
-      const totalMora = countMora(input);
-      setMoraCount(totalMora);
+      // Get proper count immediately to ensure it's always shown
+      let countedMora = 0;
+      
+      try {
+        // Try to get precise mora count
+        countedMora = countMora(input);
+      } catch (err) {
+        // Fallback to character count if mora counting fails
+        countedMora = input.replace(EXCLUDED_CHARS, '').length;
+      }
+      
+      // Always update both counts - one for calculations, one for display
+      setMoraCount(countedMora);
+      setDisplayCount(countedMora);
       
       // Reset error state
       setShowError(false);
       
       // Show warning if mora count is very different from expected
-      if (Math.abs(totalMora - EXPECTED_TOTAL) > 5) {
-        setErrorMessage(`入力された音の数(${totalMora})が短歌の標準的な音数(${EXPECTED_TOTAL})と大きく異なります。`);
+      if (Math.abs(countedMora - EXPECTED_TOTAL) > 5) {
+        setErrorMessage(`入力された音の数(${countedMora})が短歌の標準的な音数(${EXPECTED_TOTAL})と大きく異なります。`);
         setShowError(true);
       }
       
-      // Split text by mora pattern and add formatting
-      const lines = splitByMora(input, TANKA_PATTERN);
-      
-      // Format for display
-      const formattedLines = lines.map(line => line ? line + "／" : "／");
-      setDisplayedLines(formattedLines);
-      
-      // Update status indicators
-      const newStatus = lines.map((line, i) => {
-        const expectedMora = TANKA_PATTERN[i];
-        const actualMora = countMora(line);
+      try {
+        // Split text by mora pattern and add formatting
+        const lines = splitByMora(input, TANKA_PATTERN);
         
-        if (actualMora === 0) return "default";
-        if (actualMora === expectedMora) return "success";
-        return "warning";
-      });
-      
-      setMoraStatus(newStatus);
-      setShowResult(true);
+        // Format for display
+        const formattedLines = lines.map(line => line ? line + "／" : "／");
+        setDisplayedLines(formattedLines);
+        
+        // Update status indicators
+        const newStatus = lines.map((line, i) => {
+          const expectedMora = TANKA_PATTERN[i];
+          let actualMora = 0;
+          
+          try {
+            actualMora = countMora(line);
+          } catch (err) {
+            actualMora = line.replace(EXCLUDED_CHARS, '').length;
+          }
+          
+          if (actualMora === 0) return "default";
+          if (actualMora === expectedMora) return "success";
+          return "warning";
+        });
+        
+        setMoraStatus(newStatus);
+      } catch (innerError) {
+        console.error("Error processing line divisions:", innerError);
+        // Even if splitting fails, we still show the mora count
+      }
     } catch (error) {
       console.error("Error processing input:", error);
       // Even if there's an error, ensure the mora count is displayed
-      const fallbackCount = input.length; // Use length as fallback
-      setMoraCount(fallbackCount);
-      setShowResult(true);
+      try {
+        const fallbackCount = input.replace(EXCLUDED_CHARS, '').length;
+        setMoraCount(fallbackCount);
+        setDisplayCount(fallbackCount);
+      } catch (e) {
+        // Ultimate fallback - just count raw characters
+        setMoraCount(input.length);
+        setDisplayCount(input.length);
+      }
     }
   };
   
@@ -200,6 +232,7 @@ const TankaCounter: React.FC = () => {
     setUserInput("");
     setDisplayedLines([]);
     setMoraCount(0);
+    setDisplayCount(0);
     setShowResult(false);
     setShowError(false);
     setShowKanjiEditor(false);
@@ -298,14 +331,14 @@ const TankaCounter: React.FC = () => {
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary font-jp text-gray-800 resize-none h-32"
               onChange={handleInputChange}
             />
-            <div className={`absolute bottom-2 right-2 text-xs ${
-              moraCount === 0 
+            <div className={`absolute bottom-2 right-2 text-xs font-bold ${
+              displayCount === 0 
                 ? "text-gray-500" 
-                : moraCount === EXPECTED_TOTAL 
+                : displayCount === EXPECTED_TOTAL 
                 ? "text-success" 
                 : "text-secondary"
             }`}>
-              <span>{moraCount}</span> 音 {moraCount !== EXPECTED_TOTAL && `(標準: ${EXPECTED_TOTAL}音)`}
+              <span>{displayCount}</span> 音 {displayCount > 0 && displayCount !== EXPECTED_TOTAL && `(標準: ${EXPECTED_TOTAL}音)`}
             </div>
           </div>
           
