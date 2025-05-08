@@ -34,15 +34,23 @@ const TankaCounter: React.FC = () => {
   // These characters count as part of the previous mora, not as separate mora
   const SMALL_KANA = /[ぁぃぅぇぉゃゅょゎっァィゥェォャュョヮッ]/;
   const LONG_VOWEL = /[ー]/;
+  // Characters to completely exclude from mora counting
+  const EXCLUDED_CHARS = /[「」""''（）\s]/;
   
   /**
    * Count Japanese mora (syllables) in text
    * Handles special cases like small kana and long vowels
+   * Excludes characters like quotes, parentheses and spaces
    */
   const countMora = (text: string): number => {
     let count = 0;
     
     for (let i = 0; i < text.length; i++) {
+      // Skip excluded characters like quotes, parentheses and spaces
+      if (EXCLUDED_CHARS.test(text[i])) {
+        continue;
+      }
+      
       // Skip characters that are part of the previous mora
       if (i > 0 && 
           (SMALL_KANA.test(text[i]) || 
@@ -58,6 +66,7 @@ const TankaCounter: React.FC = () => {
   /**
    * Split text into groups based on mora count
    * Ensures we don't split in the middle of a mora unit
+   * Properly handles excluded characters
    */
   const splitByMora = (text: string, pattern: number[]): string[] => {
     const result: string[] = [];
@@ -76,6 +85,11 @@ const TankaCounter: React.FC = () => {
       while (currentMora < targetMora && endPos < text.length) {
         // Move to next character
         endPos++;
+        
+        // Skip excluded characters like quotes, spaces, etc.
+        if (endPos < text.length && EXCLUDED_CHARS.test(text[endPos])) {
+          continue;
+        }
         
         // Skip characters that are part of the previous mora
         if (endPos < text.length && 
@@ -265,7 +279,7 @@ const TankaCounter: React.FC = () => {
                 ? "text-success" 
                 : "text-secondary"
             }`}>
-              <span>{moraCount}</span> 音
+              <span>{moraCount}</span> 音 {moraCount !== 0 && moraCount !== EXPECTED_TOTAL && `(標準: ${EXPECTED_TOTAL}音)`}
             </div>
           </div>
           
@@ -293,7 +307,7 @@ const TankaCounter: React.FC = () => {
             
             {showResult && (
               <div className="font-jp text-gray-800 leading-relaxed">
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap">
                   {displayedLines.map((line, index) => (
                     <span key={index} className="inline-block">{line}</span>
                   ))}
