@@ -319,7 +319,7 @@ const TankaCounter: React.FC = () => {
 
         {/* Input Area */}
         <section className="mb-6">
-          <label htmlFor="tankaInput" className="block text-sm font-medium text-gray-700 mb-2 font-jp">
+          <label htmlFor="tankaInput" className="block text-sm font-bold text-black mb-2 font-jp">
             短歌を入力
           </label>
           <div className="relative">
@@ -475,7 +475,7 @@ const TankaCounter: React.FC = () => {
         </CardContent>
       )}
       
-      <CardFooter className="px-6 py-4 bg-gray-100 text-center text-xs text-gray-500">
+      <CardFooter className="px-6 py-4 bg-white border-t border-black text-center text-xs text-black">
         <p className="w-full">© 2023 短歌音数カウンター</p>
       </CardFooter>
     </Card>
