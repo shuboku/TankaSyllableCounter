@@ -6,10 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 
 const TankaCounter: React.FC = () => {
-  const [rawInput, setRawInput] = useState<string>("");
-  const [formattedInput, setFormattedInput] = useState<string>("");
-  const [result, setResult] = useState<string[]>([]);
-  const [charCount, setCharCount] = useState<number>(0);
+  const [userInput, setUserInput] = useState<string>("");
+  const [displayedLines, setDisplayedLines] = useState<string[]>([]);
+  const [moraCount, setMoraCount] = useState<number>(0);
   const [showExample, setShowExample] = useState<boolean>(false);
   const [showResult, setShowResult] = useState<boolean>(false);
   const [showError, setShowError] = useState<boolean>(false);
@@ -21,158 +20,146 @@ const TankaCounter: React.FC = () => {
     "default",
     "default",
   ]);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Constants
   const TANKA_PATTERN = [5, 7, 5, 7, 7];
   const EXPECTED_TOTAL = TANKA_PATTERN.reduce((a, b) => a + b, 0);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const selectionRef = useRef<{start: number; end: number}>({ start: 0, end: 0 });
 
-  // Format raw input for display with line breaks
-  useEffect(() => {
-    if (rawInput.trim() === "") {
-      setFormattedInput("");
+  // Japanese special character handling
+  // These characters count as part of the previous mora, not as separate mora
+  const SMALL_KANA = /[ぁぃぅぇぉゃゅょゎっァィゥェォャュョヮッ]/;
+  const LONG_VOWEL = /[ー]/;
+  
+  /**
+   * Count Japanese mora (syllables) in text
+   * Handles special cases like small kana and long vowels
+   */
+  const countMora = (text: string): number => {
+    let count = 0;
+    
+    for (let i = 0; i < text.length; i++) {
+      // Skip characters that are part of the previous mora
+      if (i > 0 && 
+          (SMALL_KANA.test(text[i]) || 
+           (LONG_VOWEL.test(text[i])))) {
+        continue;
+      }
+      count++;
+    }
+    
+    return count;
+  };
+  
+  /**
+   * Split text into groups based on mora count
+   * Ensures we don't split in the middle of a mora unit
+   */
+  const splitByMora = (text: string, pattern: number[]): string[] => {
+    const result: string[] = [];
+    let currentPos = 0;
+    
+    for (const targetMora of pattern) {
+      if (currentPos >= text.length) {
+        result.push("");
+        continue;
+      }
+      
+      let currentMora = 0;
+      let endPos = currentPos;
+      
+      // Count mora until we reach the target or end of text
+      while (currentMora < targetMora && endPos < text.length) {
+        // Move to next character
+        endPos++;
+        
+        // Skip characters that are part of the previous mora
+        if (endPos < text.length && 
+            (SMALL_KANA.test(text[endPos]) || 
+             LONG_VOWEL.test(text[endPos]))) {
+          endPos++;
+          continue;
+        }
+        
+        currentMora++;
+      }
+      
+      // Add the segment to results
+      result.push(text.substring(currentPos, endPos));
+      currentPos = endPos;
+    }
+    
+    // Add any remaining text as a final segment
+    if (currentPos < text.length) {
+      result.push(text.substring(currentPos));
+    }
+    
+    return result;
+  };
+  
+  // Process and format input for display
+  const processInput = (input: string) => {
+    if (!input || input.trim() === "") {
+      setDisplayedLines([]);
+      setMoraCount(0);
       setShowResult(false);
-      setResult([]);
+      setShowError(false);
       setMoraStatus(["default", "default", "default", "default", "default"]);
       return;
     }
-
-    const cleanInput = rawInput.replace(/\n/g, ""); // Remove any existing line breaks
-    let formatted = "";
-    let pointer = 0;
     
-    // Apply formatting to each section based on pattern
-    for (let i = 0; i < TANKA_PATTERN.length; i++) {
-      const len = TANKA_PATTERN[i];
-      const endPos = Math.min(pointer + len, cleanInput.length);
-      const phrase = cleanInput.slice(pointer, endPos);
-      
-      formatted += phrase;
-      
-      // Add line break after each section except the last one
-      if (i < TANKA_PATTERN.length - 1 && endPos < cleanInput.length) {
-        formatted += "\n";
-      }
-      
-      pointer = endPos;
-    }
-    
-    // Add any remaining text that exceeds the pattern
-    if (pointer < cleanInput.length) {
-      // If we're already at a line break, don't add another
-      if (formatted.endsWith("\n")) {
-        formatted += cleanInput.slice(pointer);
-      } else {
-        formatted += "\n" + cleanInput.slice(pointer);
-      }
-    }
-    
-    setFormattedInput(formatted);
-    processForDisplay(cleanInput);
-    setShowResult(true);
-  }, [rawInput]);
-
-  // Update character count
-  useEffect(() => {
-    setCharCount(rawInput.length);
-  }, [rawInput]);
-
-  // Handle input change - store raw input without formatting
-  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    // Save current selection
-    if (textareaRef.current) {
-      selectionRef.current = {
-        start: textareaRef.current.selectionStart,
-        end: textareaRef.current.selectionEnd
-      };
-    }
-    
-    // Remove line breaks and store raw input
-    const newRawInput = e.target.value.replace(/\n/g, "");
-    setRawInput(newRawInput);
-  };
-
-  // Restore cursor position after formatting
-  useEffect(() => {
-    if (textareaRef.current) {
-      const textarea = textareaRef.current;
-      
-      // Set the value directly to prevent controlled/uncontrolled component warnings
-      textarea.value = formattedInput;
-      
-      // Need to wait for the DOM to update
-      setTimeout(() => {
-        if (textarea) {
-          // Try to find the equivalent position in the formatted text
-          const pos = Math.min(selectionRef.current.start, formattedInput.length);
-          textarea.setSelectionRange(pos, pos);
-        }
-      }, 0);
-    }
-  }, [formattedInput]);
-
-  // Process tanka for display in results area
-  const processForDisplay = (text: string) => {
-    // Process and display the tanka
-    const outputLines: string[] = [];
-    const newMoraStatus = [...moraStatus];
-    let pointer = 0;
+    // Count total mora
+    const totalMora = countMora(input);
+    setMoraCount(totalMora);
     
     // Reset error state
     setShowError(false);
     
-    // Check if input roughly matches expected total (only show warning, don't block)
-    if (Math.abs(text.length - EXPECTED_TOTAL) > 5) {
-      setErrorMessage(`入力された文字数(${text.length})が短歌の標準的な音数(${EXPECTED_TOTAL})と大きく異なります。`);
+    // Show warning if mora count is very different from expected
+    if (Math.abs(totalMora - EXPECTED_TOTAL) > 5) {
+      setErrorMessage(`入力された音の数(${totalMora})が短歌の標準的な音数(${EXPECTED_TOTAL})と大きく異なります。`);
       setShowError(true);
     }
     
-    for (let i = 0; i < TANKA_PATTERN.length; i++) {
-      const len = TANKA_PATTERN[i];
-      const availableText = text.slice(pointer);
-      const phrase = availableText.slice(0, len);
-      outputLines.push(phrase + "／");
-      
-      // Check if this segment has the correct number of characters
-      if (phrase.length === len) {
-        newMoraStatus[i] = "success";
-      } else if (phrase.length > 0) {
-        newMoraStatus[i] = "warning";
-      } else {
-        newMoraStatus[i] = "default";
-      }
-      
-      pointer += len;
-    }
+    // Split text by mora pattern and add formatting
+    const lines = splitByMora(input, TANKA_PATTERN);
     
-    // Handle any remaining text beyond pattern
-    if (pointer < text.length) {
-      outputLines.push(text.slice(pointer) + "／");
-    }
+    // Format for display
+    const formattedLines = lines.map(line => line ? line + "／" : "／");
+    setDisplayedLines(formattedLines);
     
-    setMoraStatus(newMoraStatus);
-    setResult(outputLines);
+    // Update status indicators
+    const newStatus = lines.map((line, i) => {
+      const expectedMora = TANKA_PATTERN[i];
+      const actualMora = countMora(line);
+      
+      if (actualMora === 0) return "default";
+      if (actualMora === expectedMora) return "success";
+      return "warning";
+    });
+    
+    setMoraStatus(newStatus);
+    setShowResult(true);
   };
-
+  
+  // Handle text input change
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newInput = e.target.value;
+    setUserInput(newInput);
+    processInput(newInput);
+  };
+  
   // Handle clear button
   const clearInput = () => {
-    setRawInput("");
-    setFormattedInput("");
-    setResult([]);
+    setUserInput("");
+    setDisplayedLines([]);
+    setMoraCount(0);
     setShowResult(false);
+    setShowError(false);
     setMoraStatus(["default", "default", "default", "default", "default"]);
+    
     if (textareaRef.current) {
       textareaRef.current.focus();
-    }
-  };
-
-  // Handle Enter key press in textarea - just ignore it to prevent form submission
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter') {
-      // Prevent default to avoid form submission, but don't add any logic here
-      // as we want Enter key to behave normally for line breaks
-      e.preventDefault();
     }
   };
 
@@ -205,7 +192,7 @@ const TankaCounter: React.FC = () => {
           </div>
           
           <p className="text-gray-600 mt-2 font-jp text-sm">
-            ひらがなで入力してください。自動的に 5-7-5-7-7 の形式に分割されます。
+            ひらがなで入力してください。自動的に 5-7-5-7-7 の音数で分析されます。
           </p>
 
           {/* Example Section */}
@@ -233,20 +220,19 @@ const TankaCounter: React.FC = () => {
             <Textarea
               id="tankaInput"
               ref={textareaRef}
+              value={userInput}
               placeholder="ひらがなで短歌を入力してください..."
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary font-jp text-gray-800 resize-none h-32"
-              defaultValue=""
               onChange={handleInputChange}
-              onKeyDown={handleKeyDown}
             />
             <div className={`absolute bottom-2 right-2 text-xs ${
-              charCount === 0 
+              moraCount === 0 
                 ? "text-gray-500" 
-                : charCount === EXPECTED_TOTAL 
+                : moraCount === EXPECTED_TOTAL 
                 ? "text-success" 
                 : "text-secondary"
             }`}>
-              <span>{charCount}</span> 文字
+              <span>{moraCount}</span> 音
             </div>
           </div>
           
@@ -274,7 +260,7 @@ const TankaCounter: React.FC = () => {
             
             {showResult && (
               <div className="font-jp text-gray-800 whitespace-pre-wrap leading-relaxed">
-                {result.map((line, index) => (
+                {displayedLines.map((line, index) => (
                   <p key={index}>{line}</p>
                 ))}
               </div>
