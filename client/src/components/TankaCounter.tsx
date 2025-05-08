@@ -327,7 +327,7 @@ const TankaCounter: React.FC = () => {
 
         {/* Input Area */}
         <section className="mb-6">
-          <label htmlFor="tankaInput" className="block text-sm font-bold text-black mb-2 font-jp">
+          <label htmlFor="tankaInput" className="block text-sm font-bold text-foreground mb-2 font-jp">
             短歌を入力
           </label>
           <div className="relative">
@@ -336,30 +336,30 @@ const TankaCounter: React.FC = () => {
               ref={textareaRef}
               value={userInput}
               placeholder="ひらがなで短歌を入力してください..."
-              className="w-full px-4 py-3 border border-black focus:ring-1 focus:ring-black focus:border-black font-jp text-black resize-none h-32"
+              className="w-full px-4 py-3 border border-border focus:ring-1 focus:ring-primary focus:border-primary font-jp resize-none h-32 rounded-md"
               onChange={handleInputChange}
             />
-            <div className="absolute bottom-2 right-2 text-sm font-bold bg-white px-2 py-1 border border-black">
+            <div className="absolute bottom-2 right-2 text-sm font-bold bg-card px-2 py-1 border border-border rounded-md">
               <span className={`${
                 displayCount === 0 
-                  ? "text-black opacity-70" 
+                  ? "text-foreground opacity-70" 
                   : displayCount === EXPECTED_TOTAL 
-                  ? "text-black" 
-                  : "text-black"
+                  ? "text-foreground" 
+                  : "text-foreground"
               }`}>
                 {displayCount} 音
               </span>
               {displayCount > 0 && displayCount !== EXPECTED_TOTAL && 
-                <span className="text-black opacity-70 ml-1 text-xs">(標準: {EXPECTED_TOTAL}音)</span>
+                <span className="text-foreground opacity-70 ml-1 text-xs">(標準: {EXPECTED_TOTAL}音)</span>
               }
             </div>
           </div>
           
           <div className="flex gap-2 mt-4">
             <Button
-              variant="secondary"
+              variant="outline"
               onClick={clearInput}
-              className="flex-1 bg-white hover:bg-gray-100 text-black font-medium py-2 px-4 border border-black transition-colors duration-200 flex items-center justify-center"
+              className="flex-1 hover:bg-secondary font-medium px-4 border border-border transition-colors duration-200 flex items-center justify-center rounded-md"
             >
               <i className="ri-delete-bin-line mr-1"></i> 入力をクリア
             </Button>
@@ -368,17 +368,17 @@ const TankaCounter: React.FC = () => {
 
         {/* Results Area */}
         <section>
-          <h2 className="text-lg font-bold text-black mb-2 font-jp">結果</h2>
-          <div className="min-h-[180px] p-4 bg-white border border-black">
+          <h2 className="text-lg font-bold text-foreground mb-2 font-jp">結果</h2>
+          <div className="min-h-[180px] p-4 bg-card border border-border rounded-md">
             {!showResult && !showError && (
-              <div className="flex flex-col items-center justify-center h-full text-black py-8">
+              <div className="flex flex-col items-center justify-center h-full text-foreground py-8">
                 <i className="ri-file-text-line text-3xl mb-2"></i>
                 <p className="font-jp text-sm">短歌を入力すると、自動的に分割されます</p>
               </div>
             )}
             
             {showResult && (
-              <div className="font-jp text-black leading-relaxed">
+              <div className="font-jp text-foreground leading-relaxed">
                 <div className="flex flex-wrap">
                   {displayedLines.map((line, index) => (
                     <span key={index} className="inline-block">{line}</span>
@@ -389,7 +389,7 @@ const TankaCounter: React.FC = () => {
                   <div className="mt-4">
                     <Button
                       onClick={showKanjiConversionEditor}
-                      className="bg-black hover:bg-black/80 text-white font-medium py-2 px-4 border border-black transition-colors duration-200"
+                      className="bg-primary hover:bg-primary/80 text-primary-foreground font-medium px-4 border border-border rounded-md transition-colors duration-200"
                     >
                       <i className="ri-translate-2 mr-1"></i> 漢字に変換して保存
                     </Button>
@@ -397,26 +397,26 @@ const TankaCounter: React.FC = () => {
                 )}
                 
                 {showKanjiEditor && (
-                  <div className="mt-4 bg-white p-4 border border-black">
-                    <h3 className="text-sm font-bold text-black mb-2 font-jp">清書欄</h3>
+                  <div className="mt-4 bg-card p-4 border border-border rounded-md">
+                    <h3 className="text-sm font-bold text-foreground mb-2 font-jp">清書欄</h3>
                     <Textarea
                       ref={kanjiEditorRef}
                       value={kanjiVersion}
                       placeholder="漢字を含めた最終版を入力してください..."
-                      className="w-full px-4 py-3 border border-black focus:ring-1 focus:ring-black focus:border-black font-jp text-black resize-none h-24 mb-3"
+                      className="w-full px-4 py-3 border border-border focus:ring-1 focus:ring-primary focus:border-primary font-jp resize-none h-24 mb-3"
                       onChange={handleKanjiChange}
                     />
                     <div className="flex justify-end gap-2">
                       <Button
-                        variant="secondary"
+                        variant="outline"
                         onClick={() => setShowKanjiEditor(false)}
-                        className="bg-white hover:bg-gray-100 text-black border border-black"
+                        className="hover:bg-secondary"
                       >
                         キャンセル
                       </Button>
                       <Button
                         onClick={saveTanka}
-                        className="bg-black hover:bg-black/80 text-white border border-black"
+                        className="bg-primary hover:bg-primary/80 border border-border"
                       >
                         <i className="ri-save-line mr-1"></i> 保存
                       </Button>
@@ -448,10 +448,10 @@ const TankaCounter: React.FC = () => {
                     }
                     className={`px-2 py-1 ${
                       moraStatus[index] === "success" 
-                        ? "bg-white text-black border border-black" 
+                        ? "bg-card text-foreground border border-border" 
                         : moraStatus[index] === "warning" 
-                        ? "bg-black text-white border border-black" 
-                        : "bg-white text-black border border-black opacity-50"
+                        ? "bg-primary text-primary-foreground border border-border" 
+                        : "bg-card text-foreground border border-border opacity-50"
                     }`}
                   >
                     {count}音
@@ -468,12 +468,12 @@ const TankaCounter: React.FC = () => {
       {savedTanka.length > 0 && (
         <CardContent className="px-6 pt-0 pb-6">
           <section>
-            <h2 className="text-lg font-bold text-black mb-2 font-jp">保存された短歌</h2>
-            <div className="bg-white border border-black p-4">
+            <h2 className="text-lg font-bold text-foreground mb-2 font-jp">保存された短歌</h2>
+            <div className="bg-card border border-border p-4 rounded-md">
               {savedTanka.map((tanka, index) => (
                 <div 
                   key={index} 
-                  className="mb-3 pb-3 border-b border-black last:border-0 last:mb-0 last:pb-0 font-jp"
+                  className="mb-3 pb-3 border-b border-border last:border-0 last:mb-0 last:pb-0 font-jp text-foreground"
                 >
                   {tanka}
                 </div>
@@ -483,7 +483,7 @@ const TankaCounter: React.FC = () => {
         </CardContent>
       )}
       
-      <CardFooter className="px-6 py-4 bg-white border-t border-black text-center text-xs text-black">
+      <CardFooter className="px-6 py-4 border-t border-border text-center text-xs text-foreground">
         <p className="w-full">© 2023 短歌音数カウンター</p>
       </CardFooter>
     </Card>
