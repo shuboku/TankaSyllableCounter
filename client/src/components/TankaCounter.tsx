@@ -286,6 +286,18 @@ const TankaCounter: React.FC = () => {
     // Show confirmation and reset the editor
     setShowKanjiEditor(false);
   };
+  
+  // Delete a specific tanka
+  const deleteTanka = (index: number) => {
+    const newList = [...savedTanka];
+    newList.splice(index, 1);
+    setSavedTanka(newList);
+  };
+  
+  // Delete all saved tanka
+  const deleteAllTanka = () => {
+    setSavedTanka([]);
+  };
 
   return (
     <Card className="w-full max-w-2xl mx-auto bg-card shadow-lg overflow-hidden border border-primary rounded-md">
@@ -468,14 +480,32 @@ const TankaCounter: React.FC = () => {
       {savedTanka.length > 0 && (
         <CardContent className="px-6 pt-0 pb-6">
           <section>
-            <h2 className="text-lg font-bold text-foreground mb-2 font-jp">保存された短歌</h2>
+            <div className="flex justify-between items-center mb-2">
+              <h2 className="text-lg font-bold text-foreground font-jp">保存された短歌</h2>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={deleteAllTanka}
+                className="text-xs border-border hover:bg-secondary"
+              >
+                <i className="ri-delete-bin-line mr-1"></i> すべて削除
+              </Button>
+            </div>
             <div className="bg-card border border-border p-4 rounded-md">
               {savedTanka.map((tanka, index) => (
                 <div 
                   key={index} 
-                  className="mb-3 pb-3 border-b border-border last:border-0 last:mb-0 last:pb-0 font-jp text-foreground"
+                  className="mb-3 pb-3 border-b border-border last:border-0 last:mb-0 last:pb-0 font-jp text-foreground flex justify-between items-center"
                 >
-                  {tanka}
+                  <div className="pr-2">{tanka}</div>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => deleteTanka(index)}
+                    className="text-foreground/70 hover:text-foreground hover:bg-secondary rounded-full h-6 w-6 p-0 flex-shrink-0"
+                  >
+                    <i className="ri-close-line text-sm"></i>
+                  </Button>
                 </div>
               ))}
             </div>
