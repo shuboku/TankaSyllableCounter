@@ -13,6 +13,9 @@ const TankaCounter: React.FC = () => {
   const [showResult, setShowResult] = useState<boolean>(false);
   const [showError, setShowError] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
+  const [kanjiVersion, setKanjiVersion] = useState<string>("");
+  const [showKanjiEditor, setShowKanjiEditor] = useState<boolean>(false);
+  const [savedTanka, setSavedTanka] = useState<string[]>([]);
   const [moraStatus, setMoraStatus] = useState<Array<"default" | "success" | "warning">>([
     "default",
     "default",
@@ -21,6 +24,7 @@ const TankaCounter: React.FC = () => {
     "default",
   ]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const kanjiEditorRef = useRef<HTMLTextAreaElement>(null);
 
   // Constants
   const TANKA_PATTERN = [5, 7, 5, 7, 7];
@@ -105,6 +109,8 @@ const TankaCounter: React.FC = () => {
       setShowResult(false);
       setShowError(false);
       setMoraStatus(["default", "default", "default", "default", "default"]);
+      setKanjiVersion(""); // Reset kanji version when input is cleared
+      setShowKanjiEditor(false);
       return;
     }
     
@@ -156,6 +162,8 @@ const TankaCounter: React.FC = () => {
     setMoraCount(0);
     setShowResult(false);
     setShowError(false);
+    setShowKanjiEditor(false);
+    setKanjiVersion("");
     setMoraStatus(["default", "default", "default", "default", "default"]);
     
     if (textareaRef.current) {
@@ -166,6 +174,31 @@ const TankaCounter: React.FC = () => {
   // Toggle example visibility
   const toggleExample = () => {
     setShowExample(!showExample);
+  };
+  
+  // Show kanji editor with current tanka
+  const showKanjiConversionEditor = () => {
+    if (userInput.trim() === "") return;
+    
+    // Start with the original input as the kanji version
+    setKanjiVersion(userInput);
+    setShowKanjiEditor(true);
+  };
+  
+  // Handle changes in the kanji editor
+  const handleKanjiChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setKanjiVersion(e.target.value);
+  };
+  
+  // Save tanka to saved list
+  const saveTanka = () => {
+    if (kanjiVersion.trim() === "") return;
+    
+    // Create a new array with the saved tanka
+    setSavedTanka([...savedTanka, kanjiVersion]);
+    
+    // Show confirmation and reset the editor
+    setShowKanjiEditor(false);
   };
 
   return (
@@ -259,10 +292,51 @@ const TankaCounter: React.FC = () => {
             )}
             
             {showResult && (
-              <div className="font-jp text-gray-800 whitespace-pre-wrap leading-relaxed">
-                {displayedLines.map((line, index) => (
-                  <p key={index}>{line}</p>
-                ))}
+              <div className="font-jp text-gray-800 leading-relaxed">
+                <div className="flex flex-wrap gap-2">
+                  {displayedLines.map((line, index) => (
+                    <span key={index} className="inline-block">{line}</span>
+                  ))}
+                </div>
+                
+                {!showKanjiEditor && (
+                  <div className="mt-4">
+                    <Button
+                      onClick={showKanjiConversionEditor}
+                      className="bg-primary hover:bg-primary/90 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
+                    >
+                      <i className="ri-translate-2 mr-1"></i> 漢字に変換して保存
+                    </Button>
+                  </div>
+                )}
+                
+                {showKanjiEditor && (
+                  <div className="mt-4 bg-white p-4 rounded-lg border border-gray-200">
+                    <h3 className="text-sm font-medium text-gray-700 mb-2 font-jp">漢字に変換</h3>
+                    <Textarea
+                      ref={kanjiEditorRef}
+                      value={kanjiVersion}
+                      placeholder="漢字を含めた最終版を入力してください..."
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary font-jp text-gray-800 resize-none h-24 mb-3"
+                      onChange={handleKanjiChange}
+                    />
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="secondary"
+                        onClick={() => setShowKanjiEditor(false)}
+                        className="bg-gray-200 hover:bg-gray-300 text-gray-700"
+                      >
+                        キャンセル
+                      </Button>
+                      <Button
+                        onClick={saveTanka}
+                        className="bg-success hover:bg-success/90 text-white"
+                      >
+                        <i className="ri-save-line mr-1"></i> 保存
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
             
@@ -304,6 +378,25 @@ const TankaCounter: React.FC = () => {
       </CardContent>
 
       {/* Footer */}
+      {/* Saved Tanka Section */}
+      {savedTanka.length > 0 && (
+        <CardContent className="px-6 pt-0 pb-6">
+          <section>
+            <h2 className="text-lg font-medium text-gray-800 mb-2 font-jp">保存された短歌</h2>
+            <div className="bg-gray-50 rounded-lg border border-gray-200 p-4">
+              {savedTanka.map((tanka, index) => (
+                <div 
+                  key={index} 
+                  className="mb-3 pb-3 border-b border-gray-200 last:border-0 last:mb-0 last:pb-0 font-jp"
+                >
+                  {tanka}
+                </div>
+              ))}
+            </div>
+          </section>
+        </CardContent>
+      )}
+      
       <CardFooter className="px-6 py-4 bg-gray-100 text-center text-xs text-gray-500">
         <p className="w-full">© 2023 短歌音数カウンター</p>
       </CardFooter>
