@@ -32,11 +32,12 @@ const TankaCounter: React.FC = () => {
   const EXPECTED_TOTAL = TANKA_PATTERN.reduce((a, b) => a + b, 0);
 
   // Japanese special character handling
-  // These characters count as part of the previous mora, not as separate mora
-  const SMALL_KANA = /[ぁぃぅぇぉゃゅょゎっァィゥェォャュョヮッ]/;
-  const LONG_VOWEL = /[ー]/;
+  // These characters count as their own mora (not as part of the previous mora)
+  const SMALL_KANA = /[ぁぃぅぇぉゃゅょゎァィゥェォャュョヮ]/; 
+  const SMALL_TSU = /[っッ]/; // Small tsu counts as its own mora
+  const LONG_VOWEL = /[ー]/; // Long vowel mark counts as its own mora
   // Characters to completely exclude from mora counting
-  const EXCLUDED_CHARS = /[「」""''（）\s]/;
+  const EXCLUDED_CHARS = /[「」""''（）\s、。\.\.\.〜！？・]/;
   
   /**
    * Count Japanese mora (syllables) in text
@@ -52,18 +53,22 @@ const TankaCounter: React.FC = () => {
         continue;
       }
       
-      // Check if the next character forms a mora unit with this one
-      if (i + 1 < text.length && 
-          (SMALL_KANA.test(text[i+1]) || LONG_VOWEL.test(text[i+1]))) {
+      // Count all characters as individual mora, including small tsu (っ/ッ) and long vowel marks (ー)
+      // This satisfies the requirement to count characters like っ and ー as full mora
+      if (SMALL_TSU.test(text[i]) || LONG_VOWEL.test(text[i])) {
+        count++;
+        continue;
+      }
+      
+      // Still handle combining small kana with their preceding character
+      if (i + 1 < text.length && SMALL_KANA.test(text[i+1])) {
         count++;
         i++; // Skip the next character as we've counted it as part of this mora
         continue;
       }
       
-      // Skip characters that are part of the previous mora (should rarely happen with the check above)
-      if (i > 0 && 
-          (SMALL_KANA.test(text[i]) || 
-           (LONG_VOWEL.test(text[i])))) {
+      // Skip characters that shouldn't be counted individually (handled above)
+      if (i > 0 && SMALL_KANA.test(text[i])) {
         continue;
       }
       
@@ -105,10 +110,17 @@ const TankaCounter: React.FC = () => {
           continue;
         }
         
-        // Check for small kana or long vowel
+        // Count small tsu (っ/ッ) and long vowel marks (ー) as full mora
+        if (SMALL_TSU.test(currentChar) || LONG_VOWEL.test(currentChar)) {
+          endPos++;
+          currentMora++;
+          continue;
+        }
+        
+        // Check for small kana (but not small tsu)
         if (endPos + 1 < text.length) {
           const nextChar = text[endPos + 1];
-          if (SMALL_KANA.test(nextChar) || LONG_VOWEL.test(nextChar)) {
+          if (SMALL_KANA.test(nextChar)) {
             // Move position after this complete mora unit
             endPos += 2;
             currentMora++;
@@ -285,16 +297,8 @@ const TankaCounter: React.FC = () => {
       <CardContent className="p-6">
         {/* Instructions */}
         <section className="mb-6">
-          <div className="flex justify-between items-start">
+          <div>
             <h2 className="text-lg font-bold text-black font-jp">入力方法</h2>
-            <Button 
-              variant="ghost" 
-              onClick={toggleExample} 
-              className="text-primary text-sm flex items-center h-8 px-2"
-            >
-              <i className="ri-information-line mr-1"></i> 
-              <span>{showExample ? "例を隠す" : "例を表示"}</span>
-            </Button>
           </div>
           
           <p className="text-black mt-2 font-jp text-sm">
@@ -390,7 +394,7 @@ const TankaCounter: React.FC = () => {
                 
                 {showKanjiEditor && (
                   <div className="mt-4 bg-white p-4 border border-black">
-                    <h3 className="text-sm font-bold text-black mb-2 font-jp">漢字に変換</h3>
+                    <h3 className="text-sm font-bold text-black mb-2 font-jp">清書欄</h3>
                     <Textarea
                       ref={kanjiEditorRef}
                       value={kanjiVersion}
